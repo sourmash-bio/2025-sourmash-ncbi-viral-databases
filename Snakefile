@@ -1,4 +1,5 @@
-DATABASE_SCALED=10_000
+EUK_SKETCHES = '/group/ctbrowngrp5/2025-genbank-eukaryotes/*.sig.zip'
+DATABASE_SCALED = 10_000
 DATABASE_KSIZES = [21, 31, 51]
 
 # map various names to NCBI taxonomic ID
@@ -31,17 +32,31 @@ rule default:
         ADD_OTHER,
         'databases/eukaryotes.lineages.csv',
         'collections/upsetplot.png',
+        "collections/eukaryotes-missing.links.csv",
+
+# just print out the gbsketch rule, rather than running it - it's easier
+# to run it outside of snakemake
+rule print_gbsketch:
+    input:
+        "collections/eukaryotes-missing.links.csv",
+    params:
+        sigs="eukaryotes-missing.sig.zip",
+        check_fail="eukaryotes-missing.gbsketch-check-fail.txt",
+        fail="eukaryotes-missing.gbsketch-fail.txt",
+    shell: """
+        echo /usr/bin/time -v sourmash scripts gbsketch {input} \
+            -n 9 -r 10 -p k=21,k=31,k=51,dna \
+            --failed {params.fail} --checksum-fail {params.check_fail} \
+            -o {params.sigs} -c {threads} --batch 50
+    """
 
 
-# @CTB replace sketches/*.sig.zip with:
-# /group/ctbrowngrp5/2025-genbank-eukaryotes/*.sig.zip
 rule make_combined_manifest:
     output:
         "collections/eukaryotes.mf.csv"
     shell: """
        rm -f {output}
-       sourmash sig collect -F csv sketches/*.sig.zip \
-          -o {output}
+       sourmash sig collect -F csv {EUK_SKETCHES} -o {output} --abspath
        sourmash sig summarize {output}
     """
 
@@ -52,7 +67,7 @@ rule check_combined_manifest:
     output:
         missing="collections/eukaryotes-missing.links.csv",
     shell: """
-        scripts//compare-sigs-and-links.py --sigs {input.mf} --links {input.links} \
+        scripts/compare-sigs-and-links.py --sigs {input.mf} --links {input.links} \
             --save-missing {output.missing}
     """
 
