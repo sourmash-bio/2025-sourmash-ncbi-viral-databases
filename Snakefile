@@ -1,3 +1,8 @@
+# TOP LEVEL RULES
+# * make_collections (default rule) - makes all the link collections etc
+# * databases - builds the downsampled databases
+# * print_gbsketch - print out the directsketch command to make missing euks
+
 EUK_SKETCHES = '/group/ctbrowngrp5/2025-genbank-eukaryotes/*.sig.zip'
 DATABASE_SCALED = 10_000
 DATABASE_KSIZES = [21, 31, 51]
@@ -23,16 +28,23 @@ DATABASE_NAMES = [
     'eukaryotes-other',
     'metazoa-minus-bilateria',
     'bilateria-minus-vertebrates',
-    'plants'
+    'plants',
+    'vertebrates',
 ]
 
-rule default:
+rule make_collections:
     input:
         expand("collections/{NAME}.links.csv", NAME=set(NAMES_TO_TAX_ID)),
+        expand("collections/{NAME}.links.csv", NAME=DATABASE_NAMES),
         ADD_OTHER,
         'databases/eukaryotes.lineages.csv',
         'collections/upsetplot.png',
-        "collections/eukaryotes-missing.links.csv",
+        "collections/eukaryotes-missing.links.csv"
+
+rule databases:
+    input:
+        expand("databases/{db}.k51.sig.zip", db=DATABASE_NAMES),
+
 
 # just print out the gbsketch rule, rather than running it - it's easier
 # to run it outside of snakemake
@@ -163,11 +175,12 @@ ruleorder: make_invertebrates_csv > make_metazoa_sub_bilateria_csv > eukaryotes_
 
 rule downsample_sig:
     input:
-        "sketches/{NAME}.sig.zip",
+        "collections/eukaryotes.mf.csv"
     output:
-        "downsampled/{NAME}.k51.s100_000.sig.zip",
+        "databases/{NAME}.k{KSIZE}.sig.zip",
     shell: """
-        sourmash sig downsample -k 51 -s 100_000 {input} -o {output}
+        sourmash sig downsample -k {wildcards.KSIZE} --scaled {DATABASE_SCALED} \
+            {input} -o {output}
     """
 
 rule merge_sig:
