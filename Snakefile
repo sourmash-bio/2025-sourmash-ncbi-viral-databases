@@ -175,12 +175,14 @@ ruleorder: make_invertebrates_csv > make_metazoa_sub_bilateria_csv > eukaryotes_
 
 rule downsample_sig:
     input:
-        "collections/eukaryotes.mf.csv"
+        mf="collections/eukaryotes.mf.csv",
+        pl="collections/{NAME}.links.csv",
     output:
         "databases/{NAME}.k{KSIZE}.sig.zip",
     shell: """
         sourmash sig downsample -k {wildcards.KSIZE} --scaled {DATABASE_SCALED} \
-            {input} -o {output}
+            --picklist {input.pl}:accession:ident \
+            {input.mf} -o {output}
     """
 
 rule merge_sig:
