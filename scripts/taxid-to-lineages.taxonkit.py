@@ -72,7 +72,6 @@ def taxonkit_get_lineages_as_dict(
         if len(names) != n_taxids or len(names) != len(ranks):
             print(f"ERROR: taxonkit lineage for taxid {taxid} has mismatched lengths")
             print(f"names: {len(names)} taxids: {n_taxids} ranks: {len(ranks)}")
-            failed = True
         else:
             taxinfo[taxid] = (taxpath, names)
 
