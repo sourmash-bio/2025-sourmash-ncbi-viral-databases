@@ -1,17 +1,14 @@
-# 2025-sourmash-eukaryotic-databases
+# 2025-sourmash-ncbi-viral-databases
 
 Build infrastructure for creating sourmash databases from NCBI for all
-eukaryotic reference genomes.
+viral genomes.
 
 The strategy is:
 
-* use the directsketch plugin to build high rez (scaled=1000,
-  k=21/31/51) for all euks, and put them all in a directory outside of
-  sourmash-db;
-* (this repo) make the various collection accession/taxid lists
-  directly from NCBI;
-* (this repo) build the full set of euk collections, downsampled
-  to scaled=10_000
+* use the NCBI datasets API to retrieve accessions and taxids for all
+  the viral genomes in NCBI; create a lineage CSV for them.
+* use the directsketch plugin to build skip-mer sketches for all of them: `-p
+  skipm2n3,k=24,scaled=50`
 
 ## How to install taxdump for taxonkit
 
