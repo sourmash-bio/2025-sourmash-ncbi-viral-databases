@@ -82,12 +82,14 @@ def main(args):
     # get the taxid from input csv #
     print(f"reading accession & taxid info from '{args.info}'")
     taxid2ident = {}
+    accessions = []
     with open(args.info, "r") as f:
         reader = csv.DictReader(f, delimiter=",")
         for row in reader:
             ident = row["accession"]
-            taxid = row["taxid"]
-            taxid2ident[int(taxid)] = ident
+            taxid = int(row["taxid"])
+            taxid2ident[taxid] = ident
+            accessions.append((ident, taxid))
 
     print(f"got {len(taxid2ident)} taxids")
     # now get all lineages for the taxids
@@ -101,7 +103,7 @@ def main(args):
 
     lineages_count = 0
     failed_lineages = 0
-    for taxid, ident in taxid2ident.items():
+    for ident, taxid in accessions:
         lineage = taxid2lineage.get(taxid)
         failed = False
         if lineage:

@@ -22,14 +22,14 @@ rule print_gbsketch:
     input:
         "collections/ncbi-viruses.links.csv",
     params:
-        sigs="databases/ncbi-viruses.skip_m2n3.k24.sig.zip",
+        sigs="databases/ncbi-viruses.skip_m2n3.k24.zip",
         check_fail="gbsketch-check-fail.ncbi-viruses.txt",
         fail="gbsketch-fail.ncbi-viruses.txt",
     shell: """
         echo /usr/bin/time -v sourmash scripts gbsketch {input} \
             -n 9 -r 10 -p k=21,k=31,k=51,dna \
             --failed {params.fail} --checksum-fail {params.check_fail} \
-            -o {params.sigs} -c {threads} --batch 50
+            -o {params.sigs} -c {threads} --batch 1000
     """
 
 
@@ -57,7 +57,7 @@ rule get_tax:
     output:
         "collections/{NAME}.dataset-reports.pickle"
     params:
-        tax_id = lambda w: { **NAMES_TO_TAX_ID }[w.NAME]
+        tax_id = lambda w: NAMES_TO_TAX_ID[w.NAME]
     shell: """
        scripts/1-get-by-tax.py --taxons {params.tax_id} -o {output} \
           --all-genomes
