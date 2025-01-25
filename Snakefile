@@ -15,6 +15,36 @@ rule make_collections:
     input:
         expand("collections/{NAME}.links.csv", NAME=set(NAMES_TO_TAX_ID)),
         'databases/ncbi-viruses.lineages.csv',
+        "databases/ncbi-viruses.skip_m2n3.k=24.scaled=50.sig.zip",
+        "databases/ncbi-viruses.dna.k=21.scaled=50.sig.zip",
+        "databases/ncbi-viruses.dna.k=31.scaled=50.sig.zip",
+
+rule build_database_skip:
+    input:
+        "collections/ncbi-viruses.mf.csv"
+    output:
+        "databases/ncbi-viruses.skip_m2n3.k=24.scaled=50.sig.zip"
+    shell: """
+        sourmash sig cat -k 24 --skipmer-m2n3 {input} -o {output}
+    """
+
+rule build_database_k21:
+    input:
+        "collections/ncbi-viruses.mf.csv"
+    output:
+        "databases/ncbi-viruses.dna.k=21.scaled=50.sig.zip"
+    shell: """
+        sourmash sig cat -k 21 --dna {input} -o {output}
+    """
+
+rule build_database_k31:
+    input:
+        "collections/ncbi-viruses.mf.csv"
+    output:
+        "databases/ncbi-viruses.dna.k=31.scaled=50.sig.zip"
+    shell: """
+        sourmash sig cat -k 31 --dna {input} -o {output}
+    """
 
 # just print out the gbsketch rule, rather than running it - it's easier
 # to run it outside of snakemake
@@ -22,7 +52,7 @@ rule print_gbsketch:
     input:
         "collections/ncbi-viruses.links.csv",
     params:
-        sigs="databases/ncbi-viruses.skip_m2n3.k24.zip",
+        sigs="sketches/ncbi-viruses.zip",
         check_fail="gbsketch-check-fail.ncbi-viruses.txt",
         fail="gbsketch-fail.ncbi-viruses.txt",
         sketch_p=" ".join([f"-p {ps}" for ps in SKETCH_PARAMS])
@@ -36,19 +66,19 @@ rule print_gbsketch:
 
 rule make_combined_manifest:
     output:
-        "collections/eukaryotes.mf.csv"
+        "collections/ncbi-viruses.mf.csv"
     shell: """
        rm -f {output}
-       sourmash sig collect -F csv {EUK_SKETCHES} -o {output} --abspath
+       sourmash sig collect -F csv sketches/*.zip -o {output} --abspath
        sourmash sig summarize {output}
     """
 
 rule check_combined_manifest:
     input:
-        mf="collections/eukaryotes.mf.csv",
-        links="collections/eukaryotes.links.csv",
+        mf="collections/ncbi-viruses.mf.csv",
+        links="collections/ncbi-viruses.links.csv",
     output:
-        missing="collections/eukaryotes-missing.links.csv",
+        missing="collections/ncbi-viruses-missing.links.csv",
     shell: """
         scripts/compare-sigs-and-links.py --sigs {input.mf} --links {input.links} \
             --save-missing {output.missing}
