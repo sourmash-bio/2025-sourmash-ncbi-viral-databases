@@ -1,6 +1,6 @@
 # TOP LEVEL RULES: @CTB
 
-SKETCH_PARAMS = "-p skipm2n3,k=24,scaled=50"
+SKETCH_PARAMS = ["skipm2n3,k=24,scaled=50", "dna,k=21,k=31,scaled=50"]
 
 # map various names to NCBI taxonomic ID
 NAMES_TO_TAX_ID = {
@@ -25,9 +25,10 @@ rule print_gbsketch:
         sigs="databases/ncbi-viruses.skip_m2n3.k24.zip",
         check_fail="gbsketch-check-fail.ncbi-viruses.txt",
         fail="gbsketch-fail.ncbi-viruses.txt",
+        sketch_p=" ".join([f"-p {ps}" for ps in SKETCH_PARAMS])
     shell: """
         echo /usr/bin/time -v sourmash scripts gbsketch {input} \
-            -n 9 -r 10 -p k=21,k=31,k=51,dna \
+            -n 9 -r 10 {params.sketch_p} \
             --failed {params.fail} --checksum-fail {params.check_fail} \
             -o {params.sigs} -c {threads} --batch 1000
     """
